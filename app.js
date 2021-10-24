@@ -1,35 +1,25 @@
+require('dotenv').config();
 const express = require('express')
 const app = express();
 const cors = require('cors')
-const mysql = require('mysql');
-
-// const url = "mongodb+srv://vijayvijay1997:sunder.vj@cluster0.s3gkt.mongodb.net/bustracker?authSource=admin&replicaSet=atlas-78d6x4-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true"
+const mysql = require('mysql2');
 
 
-//Connect to the db
-const con = mysql.createConnection({
-  connectionLimit: 10,
-    host: 'localhost',
-    user: 'user',
-    password: 'password',
-    database: 'sitepol'
-  });
-
-
-  con.connect((err) => {
-    if(err){
-      console.log('Error connecting to Db');
-      return;
-    }
-    console.log('Connection established');
-  });
-
-var port = 3000;
-var host = '0.0.0.0' //must be string
+var port = process.env.PORT;
+var host = process.env.HOST; //must be string
 
 //Import Routes
-const employee = require('./routes/user_routes')
-// const driver = require('./routes/productRoutes')
+const employee = require('./route/employee.route')
+
+
+// temporarily added for develoopment
+// const db = require("./model");
+// db.sequelize.sync();
+
+// db.sequelize.sync({ force: true }).then(() => {
+//   console.log("Drop and re-sync db.");
+// });
+
 
 //MiddleWare
 app.use(cors());
@@ -38,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //ROUTES
-app.use('/user', user)
+app.use('/employee', employee)
 
 //Listening to the server
 app.listen(port, host, function() {
