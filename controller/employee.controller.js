@@ -7,49 +7,35 @@ exports.create = (req, res) => {
   
 };
 
-// Retrieve all Tutorials from the database.
-exports.findOne = (req, res) => {
-    const employee_ID = req.query.employee_ID;
+// Retrieve Emloyee details from the database.
+exports.getEmployeeDetails = async (req, res, next) => {
+    const employee_ID = req.body.employee_ID;
     
-        Employee.findOne({ where: {employee_ID:employee_ID} })
-        .then(data => {
-            res.status(200).send({
+    try {
+        var result = await Employee.findOne({ where: {employee_ID:employee_ID} })
+        if(result)
+        {
+            res.status(200).json({
                 code : 200,
                 status: "success",
                 message: "Documents fetched successfully",
-                data
+                data:[result]
             })
-            .catch(err => {
-                res.status(500).send({
-                    code : 500,
-                    status: "failure",
-                    message: "there are no documents available",
-                });
-              });
-          })
+        }
+        else
+        {
+            res.status(200).json({
+                code : 401,
+                status: "failure",
+                message: "No results found",
+            })
+        }
+        
+    }catch(err){
+        res.json({
+            status: "error",
+            message:
+              "unknown error found from server side",
+          });
+    }
 }
-    
-// Find a single Tutorial with an id
-exports.findOne = (req, res) => {
-  
-};
-
-// Update a Tutorial by the id in the request
-exports.update = (req, res) => {
-  
-};
-
-// Delete a Tutorial with the specified id in the request
-exports.delete = (req, res) => {
-  
-};
-
-// Delete all Tutorials from the database.
-exports.deleteAll = (req, res) => {
-  
-};
-
-// Find all published Tutorials
-exports.findAllPublished = (req, res) => {
-  
-};
