@@ -1,18 +1,68 @@
 const db = require("../model");
 const User = db.user;
 const CustomerLocation = db.customerlocation;
+const jwt = require('jsonwebtoken')
+const {createToken} = require('../middelware/authMiddleware')
+const { check, validationResult } = require('express-validator');
+
+
 
 // const Op = db.Sequelize.Op;
 
 // <===============================CONTROLLERS=======================================================>
 
-exports.login = (req, res) => {};
+exports.login =  async (req, res) => {
+
+  // const errors = validationResult(req);
+  // if(!errors.isEmpty())
+  // {
+  //   return res.status(200).json({
+  //     code: 402,
+  //     status: "failure",
+  //     message: "validation error",
+  //     result : {
+  //       errors : errors.array(),
+  //     }
+  //   });
+  // }
+  const user_name = req.body.phone_number;
+  const user_password = req.body.password;
+  try {
+    var result = await User.findOne({ where: { user_name: user_name, user_password: user_password },attributes: ["user_name","user_password"], });
+    console.log(result);
+    const token = createToken(result.user_name)
+    if (result) {
+      res.status(200).json({
+        code: 200,
+        status: "success",
+        message: "LoggedIn successfully",
+        result : {
+          token : token,
+          SE_name : result.user_name
+        }
+      });
+    } else {
+      res.status(200).json({
+        code: 401,
+        status: "failure",
+        message: "Please check the credentials",
+      });
+    }
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: "unknown error found from server side",
+    });
+  }
+
+};
 
 // Retrieve all Tutorials from the database.
 exports.getUserDetails = async (req, res, next) => {
   const user_id = req.body.user_id;
   try {
     var result = await User.findOne({ where: { user_id: user_id } });
+    // const token = createToken(re)
     if (result) {
       res.status(200).json({
         code: 200,
@@ -77,7 +127,7 @@ exports.onDuty = async (req, res, next) => {
           res.status(200).json({
             code: 200,
             status: "success",
-            message: "your attendance for your day is marked successfully",
+            message: "your attendance for the day is marked successfully",
           });
         }
       } else {
@@ -103,7 +153,7 @@ exports.onDuty = async (req, res, next) => {
 };
 
 
-// <===============================CONTROLLERS=======================================================>
+// <===============================Functions=======================================================>
 
 // latitude and logitude distance calculation
 function calcCrow(lat1, lon1, lat2, lon2) {
@@ -125,3 +175,14 @@ function calcCrow(lat1, lon1, lat2, lon2) {
 function toRad(Value) {
   return (Value * Math.PI) / 180;
 }
+
+
+
+//JWT token created here
+
+// const maxTime = 3 * 24 * 60 * 60;
+// const createToken = (id) => {
+//   return jwt.sign({ id }, 'secret key', {
+//     expiresIn: maxTime
+//   }); 
+// }
