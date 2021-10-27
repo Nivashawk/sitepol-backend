@@ -22,5 +22,7 @@ db.sequelize = sequelize;
 db.employee = require("./employee.model.js")(sequelize, Sequelize);
 db.user = require("./siteEngineer.model.js")(sequelize, Sequelize);
 db.customerlocation = require("./customerLocation.model")(sequelize, Sequelize);
+db.reason_SE = require("./reasons.model")(sequelize, Sequelize);
+db.moving_out_SE = require("./moving_out.model")(sequelize, Sequelize);
 
 module.exports = db;

@@ -19,8 +19,8 @@ const requireAuth = (req, res, next) => {
       jwt.verify(token[1], "secret key", (err) => {
         if (err) {
           console.log(err.message);
-          res.status(200).json({
-            code: 400,
+          res.status(401).json({
+            code: 401,
             status: "Authorization error",
             message: err.message,
           });
@@ -30,8 +30,8 @@ const requireAuth = (req, res, next) => {
       });
     }
   } else {
-    res.status(200).json({
-      code: 400,
+    res.status(401).json({
+      code: 401,
       status: "Authorization error",
       message: "Authorization token missing in request",
     });

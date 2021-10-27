@@ -1,45 +1,31 @@
 const db = require("../model");
 const User = db.user;
 const CustomerLocation = db.customerlocation;
-const jwt = require('jsonwebtoken')
-const {createToken} = require('../middelware/authMiddleware')
-const { check, validationResult } = require('express-validator');
-
-
-
-// const Op = db.Sequelize.Op;
+const Reason = db.reason_SE;
+const MovingOut = db.moving_out_SE;
+const jwt = require("jsonwebtoken");
+const { createToken } = require("../middelware/authMiddleware");
 
 // <===============================CONTROLLERS=======================================================>
 
-exports.login =  async (req, res) => {
-
-  // const errors = validationResult(req);
-  // if(!errors.isEmpty())
-  // {
-  //   return res.status(200).json({
-  //     code: 402,
-  //     status: "failure",
-  //     message: "validation error",
-  //     result : {
-  //       errors : errors.array(),
-  //     }
-  //   });
-  // }
-  const user_name = req.body.phone_number;
-  const user_password = req.body.password;
+// site_Engineer Login handled here
+exports.login = async (req, res) => {
+  const { phone_number, password } = req.body;
   try {
-    var result = await User.findOne({ where: { user_name: user_name, user_password: user_password },attributes: ["user_name","user_password"], });
+    var result = await User.findOne({
+      where: { user_name: phone_number, user_password: password },
+      attributes: ["user_name", "user_password"],
+    });
     console.log(result);
-    const token = createToken(result.user_name)
+    const token = createToken(result.user_name);
     if (result) {
       res.status(200).json({
         code: 200,
         status: "success",
         message: "LoggedIn successfully",
-        result : {
-          token : token,
-          SE_name : result.user_name
-        }
+        result: {
+          token: token,
+        },
       });
     } else {
       res.status(200).json({
@@ -54,10 +40,10 @@ exports.login =  async (req, res) => {
       message: "unknown error found from server side",
     });
   }
-
 };
 
-// Retrieve all Tutorials from the database.
+
+// Retrieve all details from the database.
 exports.getUserDetails = async (req, res, next) => {
   const user_id = req.body.user_id;
   try {
@@ -87,9 +73,8 @@ exports.getUserDetails = async (req, res, next) => {
 
 // onduty API handled here
 exports.onDuty = async (req, res, next) => {
-  const user_id = req.body.user_id;
-  const lat1 = req.body.latitude;
-  const long1 = req.body.longitude;
+  const { user_id, latitude, longitude } = req.body;
+ 
   try {
     var find_current_site_of_employee = await User.findOne({
       where: { user_id: user_id },
@@ -105,13 +90,11 @@ exports.onDuty = async (req, res, next) => {
         attributes: ["latitude", "longitude"],
       });
       // console.log("current_site_location ->",current_site_location);
-      if (
-        current_site_location != null
-      ) {
+      if (current_site_location != null) {
         distance_btw_employee_and_site =
           calcCrow(
-            lat1,
-            long1,
+            latitude,
+            longitude,
             current_site_location.latitude,
             current_site_location.longitude
           ) * 1000;
@@ -152,6 +135,107 @@ exports.onDuty = async (req, res, next) => {
   }
 };
 
+// Retrieve all reasons for site engineer.
+exports.getReasons = async (req, res, next) => {
+  try {
+    var result = await Reason.findAll({
+      attributes: ["reason_ID", "main_reason", "sub_reason"],
+    });
+    // const token = createToken(re)
+    if (result) {
+      res.status(200).json({
+        code: 200,
+        status: "success",
+        message: "Documents fetched successfully",
+        result,
+      });
+    } else {
+      res.status(200).json({
+        code: 401,
+        status: "failure",
+        message: "No results found",
+      });
+    }
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: "unknown error found from server side",
+    });
+  }
+};
+
+
+// Posting Moving out reasons
+exports.MovingOutStage1 = async (req, res, next) => {
+  const { user_id, reason_id, customer_id, stage, latitude, longitude } =
+    req.body;
+  // stage 1 moving out handled here
+  if (stage === 1) {
+    try {
+      var result = await User.update(
+        { current_moving_out_status: reason_id },
+        { where: { user_id: user_id } }
+      );
+      // const token = createToken(re)
+      if (result) {
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "Status updated successfully",
+          result,
+        });
+      } else {
+        res.status(200).json({
+          code: 401,
+          status: "failure",
+          message: "No results found",
+        });
+      }
+    } catch (err) {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
+    }
+  }
+
+  
+  // stage 2 moving out handled here
+  else if (stage === 2) {
+    try {
+      var result = await MovingOut.findOne({
+        where: { reason_ID: reason_id, customer_ID: customer_id },
+        attributes: ["latitude", "longitude"],
+      });
+
+      // const token = createToken(re)
+      if (result) {
+        distance_btw_employee_and_site =
+          calcCrow(latitude, longitude, result.latitude, result.longitude) *
+          1000;
+        if (distance_btw_employee_and_site >= 100) {
+          res.status(200).json({
+            code: 401,
+            status: "failure",
+            message:
+              "your are not in the radius please move forward and try again",
+          });
+        } else {
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "site engineer reached the place successfully",
+          });
+        }
+      }
+    } catch (err) {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
+    }
+  }
+};
 
 // <===============================Functions=======================================================>
 
@@ -175,14 +259,3 @@ function calcCrow(lat1, lon1, lat2, lon2) {
 function toRad(Value) {
   return (Value * Math.PI) / 180;
 }
-
-
-
-//JWT token created here
-
-// const maxTime = 3 * 24 * 60 * 60;
-// const createToken = (id) => {
-//   return jwt.sign({ id }, 'secret key', {
-//     expiresIn: maxTime
-//   }); 
-// }
