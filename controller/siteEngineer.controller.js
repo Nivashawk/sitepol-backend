@@ -5,6 +5,7 @@ const Reason = db.reason_SE;
 const MovingOut = db.moving_out_SE;
 const jwt = require("jsonwebtoken");
 const { createToken } = require("../middelware/authMiddleware");
+const findDistance = require("../helper/distance")
 
 // <===============================CONTROLLERS=======================================================>
 
@@ -45,9 +46,9 @@ exports.login = async (req, res) => {
 
 // Retrieve all details from the database.
 exports.getUserDetails = async (req, res, next) => {
-  const user_id = req.body.user_id;
+  const phone_number = req.body.phone_number;
   try {
-    var result = await User.findOne({ where: { user_id: user_id } });
+    var result = await User.findOne({ where: { user_name: phone_number }, attributes:["user_id", "current_site", "current_moving_out_status", "duty_status" ] });
     // const token = createToken(re)
     if (result) {
       res.status(200).json({
@@ -92,7 +93,7 @@ exports.onDuty = async (req, res, next) => {
       // console.log("current_site_location ->",current_site_location);
       if (current_site_location != null) {
         distance_btw_employee_and_site =
-          calcCrow(
+        findDistance(
             latitude,
             longitude,
             current_site_location.latitude,
@@ -107,11 +108,16 @@ exports.onDuty = async (req, res, next) => {
               "you are not in the 500M radius of your site, please move forward and try again",
           });
         } else {
+          await User.update(
+            { duty_status: 1 },
+            { where: { user_id: user_id } }
+          );
           res.status(200).json({
             code: 200,
             status: "success",
             message: "your attendance for the day is marked successfully",
           });
+          
         }
       } else {
         res.status(200).json({
@@ -176,7 +182,6 @@ exports.MovingOutStage1 = async (req, res, next) => {
         { current_moving_out_status: reason_id },
         { where: { user_id: user_id } }
       );
-      // const token = createToken(re)
       if (result) {
         res.status(200).json({
           code: 200,
@@ -202,6 +207,42 @@ exports.MovingOutStage1 = async (req, res, next) => {
   
   // stage 2 moving out handled here
   else if (stage === 2) {
+    try {
+      var result = await MovingOut.findOne({
+        where: { reason_ID: reason_id, customer_ID: customer_id },
+        attributes: ["latitude", "longitude"],
+      });
+
+      // const token = createToken(re)
+      if (result) {
+        distance_btw_employee_and_site =
+        findDistance(latitude, longitude, result.latitude, result.longitude) *
+          1000;
+        if (distance_btw_employee_and_site >= 100) {
+          res.status(200).json({
+            code: 401,
+            status: "failure",
+            message:
+              "your are not in the radius please move forward and try again",
+          });
+        } else {
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "site engineer reached the place successfully",
+          });
+        }
+      }
+    } catch (err) {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
+    }
+  }
+
+// stage 3 moving out handled here
+  else if (stage === 3) {
     try {
       var result = await MovingOut.findOne({
         where: { reason_ID: reason_id, customer_ID: customer_id },
@@ -237,25 +278,97 @@ exports.MovingOutStage1 = async (req, res, next) => {
   }
 };
 
-// <===============================Functions=======================================================>
 
-// latitude and logitude distance calculation
-function calcCrow(lat1, lon1, lat2, lon2) {
-  var R = 6371; // km
-  var dLat = toRad(lat2 - lat1);
-  var dLon = toRad(lon2 - lon1);
-  var lat1 = toRad(lat1);
-  var lat2 = toRad(lat2);
+// Tag my location handled here
+exports.TagMyLocation = async (req, res, next) => {
+  const { reason_id, customer_id, address, place_name, latitude, longitude } = req.body;
+  // console.log("param->", reason_id, customer_id, address, place_name, latitude, longitude );
+    try {
+      if(reason_id === 1 || reason_id === 2){
+        var result = await MovingOut.update(
+          { address : address, place_name: place_name, latitude: latitude, longitude: longitude },
+          { where: { reason_ID: reason_id, customer_ID: customer_id }}
+        );
+        console.log("result->",result[0]);
+        if (result[0] !== 0) {
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "details updated successfully",
+          });
+        } else {
+          res.status(200).json({
+            code: 401,
+            status: "failure",
+            message: `customer_ID ${customer_id} is not available`,
+          });
+        }
+      }
+      else{
+        res.status(200).json({
+          code: 401,
+          status: "failure",
+          message: "reason_id should be 1 or 2",
+        });
 
-  var a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c;
-  return (Math.round(d * 100) / 100).toFixed(2);
+      }
+      
+    } catch (err) {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
+    }
 }
 
-// Converts numeric degrees to radians
-function toRad(Value) {
-  return (Value * Math.PI) / 180;
+// Off duty handled here
+exports.offDuty = async (req, res, next) => {
+  const { user_id, customer_id, latitude, longitude } = req.body;
+    try {
+      var result = await CustomerLocation.findOne({
+        where: { customer_ID: customer_id },
+        attributes: ["latitude", "longitude"],
+      });
+      console.log(result);
+      if (result != null) {
+        distance_btw_employee_and_site =
+        findDistance(
+            latitude,
+            longitude,
+            result.latitude,
+            result.longitude
+          ) * 1000;
+
+        if (distance_btw_employee_and_site > 500) {
+          res.status(200).json({
+            code: 401,
+            status: "failure",
+            message:
+              "you are not in the 500M radius of your site, please move forward and try again",
+          });
+        } else {
+          await User.update(
+            { duty_status: 0 },
+            { where: { user_id: user_id } }
+          );
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "you have updated your status successfully",
+          });
+        }
+      } else {
+        res.status(200).json({
+          code: 401,
+          status: "failure",
+          message: "No results found for this customer id",
+        });
+      }
+    } catch (err) {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
+    }
 }
+

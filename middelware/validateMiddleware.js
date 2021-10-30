@@ -41,6 +41,28 @@ const onduty = (req, res, next) => {
     });
   };
 
+  // validation for Offduty
+const offduty = (req, res, next) => {
+  const validationRule = {
+    user_id: "required|integer",
+    customer_id: "required|integer",
+    latitude: "required|string",
+    longitude: "required|string",
+  };
+  validator(req.body, validationRule, {}, (err, status) => {
+    if (!status) {
+      res.status(412).send({
+        code: 412,
+        status: "failure",
+        message: "validation error",
+        err
+      });
+    } else {
+      next();
+    }
+  });
+};
+
   // validation for movingoutstage1
 const movingoutStage1 = (req, res, next) => {
     const validationRule = {
@@ -65,8 +87,36 @@ const movingoutStage1 = (req, res, next) => {
     });
   };
 
+
+   // validation for tagMyLocation
+const tagLocation = (req, res, next) => {
+  const validationRule = {
+      reason_id: "required|integer",
+      customer_id: "required|integer",
+      place_name: "required|string",
+      address: "required|string",
+      latitude: "required|string",
+      longitude: "required|string"
+  };
+  validator(req.body, validationRule, {}, (err, status) => {
+    if (!status) {
+      res.status(412).send({
+        code: 412,
+        status: "failure",
+        message: "validation error",
+        err
+      });
+    } else {
+      next();
+    }
+  });
+};
+
+
 module.exports = {
   login,
   onduty,
-  movingoutStage1
+  offduty,
+  movingoutStage1,
+  tagLocation
 };

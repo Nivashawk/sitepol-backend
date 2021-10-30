@@ -8,6 +8,9 @@ module.exports = (sequelize, Sequelize) => {
         Customer_ID	: {
             type: Sequelize.BIGINT(10)
         },
+        place_name	: {
+            type: Sequelize.STRING(50)
+        },
         address	: {
             type: Sequelize.STRING(50)
         },

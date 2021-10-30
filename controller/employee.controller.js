@@ -2,7 +2,7 @@ const db = require("../model");
 const Employee = db.employee;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new Tutorial
+// Create and Save 
 exports.create = (req, res) => {
   
 };
