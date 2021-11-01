@@ -12,6 +12,7 @@ var host = process.env.HOST; //must be string
 //Import Routes
 const employee = require('./route/employee.route')
 const siteEngineer = require('./route/siteEngineer.route')
+const liveLocation = require('./route/websocket.route')
 
 
 // temporarily added for develoopment
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 //ROUTES
 app.use('/employee', employee)
 app.use('/site-engineer', siteEngineer)
+app.use('/', liveLocation)
 
 //Listening to the server
 app.listen(port, host, function() {

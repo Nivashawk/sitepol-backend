@@ -53,11 +53,9 @@ module.exports = (sequelize, Sequelize) => {
         user_total_logins: {
             type: Sequelize.BIGINT(50)
         },
-        current_moving_out_status: {
-            type: Sequelize.BIGINT(50)
-        },
-        duty_status: {
-            type: Sequelize.BIGINT(50)
+        tag_my_location_status: {
+            type: Sequelize.BIGINT(50),
+            defaultValue:0
         },
         user_last_login: {
             type: Sequelize.DATE

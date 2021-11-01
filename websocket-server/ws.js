@@ -7,7 +7,7 @@ const server = app.listen(8080)
 
 
 const wss = new websocket.Server({
-  noServer: true,
+  server
 })
 
 
@@ -15,9 +15,10 @@ const wss = new websocket.Server({
 
 wss.on('connection', function(ws){
     wss.on('message', function(data){
-      ws.client.forEach(function each(client){
+      wss.client.forEach(function each(client){
         if(client.readystate === WebSocket.OPEN) {
           client.send(data);
+          console.log(data);
         }
       })
     })
@@ -25,15 +26,16 @@ wss.on('connection', function(ws){
 
 
 // verify client using upgrade method
-server.on('upgrade', async function upgrade(request, socket, head) {
-  // Do what you normally do in `verifyClient()` here and then use
-  // `WebSocketServer.prototype.handleUpgrade()`.
+// server.on('upgrade', async function upgrade(request, socket, head) {
+//   // Do what you normally do in `verifyClient()` here and then use
+//   // `WebSocketServer.prototype.handleUpgrade()`.
 
-  // test for authentication
+//   // test for authentication
   
-  return socket.end('HTTP/1.1 401 Unauthorized\r\n', 'ascii')
+  
+//   // return socket.end('HTTP/1.1 401 Unauthorized\r\n', 'ascii')
 
-  wss.handleUpgrade(request, socket, head, function done(ws) {
-    wss.emit('connection', ws, request, ...args);
-  });
-});
+//   wss.handleUpgrade(request, socket, head, function done(ws) {
+//     wss.emit('connection', ws);
+//   });
+// });

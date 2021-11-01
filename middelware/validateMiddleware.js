@@ -112,11 +112,31 @@ const tagLocation = (req, res, next) => {
   });
 };
 
+ // validation for tagMyLocation
+ const getdetails = (req, res, next) => {
+  const validationRule = {
+      phone_number: "required|integer",
+  };
+  validator(req.body, validationRule, {}, (err, status) => {
+    if (!status) {
+      res.status(412).send({
+        code: 412,
+        status: "failure",
+        message: "validation error",
+        err
+      });
+    } else {
+      next();
+    }
+  });
+};
+
 
 module.exports = {
   login,
   onduty,
   offduty,
   movingoutStage1,
-  tagLocation
+  tagLocation,
+  getdetails
 };
