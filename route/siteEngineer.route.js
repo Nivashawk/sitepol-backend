@@ -12,6 +12,8 @@ router.post('/movingout',  validation.movingoutStage1, SiteEngineerController.Mo
 router.post('/taglocation',  validation.tagLocation, SiteEngineerController.TagMyLocation)
 router.post('/offduty',  validation.offduty, SiteEngineerController.offDuty)
 router.post('/create',  SiteEngineerController.create)
+router.post('/createReasons',  SiteEngineerController.createReasons)
+router.post('/getSiteEnginnerDetails',  SiteEngineerController.getSiteEnginnerDetails)
 // router.get('/websocket', SiteEngineerController.websocket)
 
 

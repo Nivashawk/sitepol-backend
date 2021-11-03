@@ -1,6 +1,6 @@
 require('dotenv').config();
 module.exports = (sequelize, Sequelize) => {
-    const CustomerLocation = sequelize.define(process.env.CUSTOMER_LOCATION_TABLE, {
+    const CustomerLocation = sequelize.define('customer_location', {
         id: {
             type: Sequelize.BIGINT(10),
             primaryKey: true

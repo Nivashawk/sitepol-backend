@@ -5,6 +5,7 @@ const CustomerLocation = db.customerlocation;
 const Reason = db.reason_SE;
 const MovingOut = db.moving_out_SE;
 const TRACK_SITE_ENGINEER = db.track_siteEngineer;
+const StaticMovingOut = db.StaticMovingOut
 const Op = db.Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const { createToken } = require("../middelware/authMiddleware");
@@ -14,7 +15,7 @@ const route_distance = require("../helper/google_distance");
 // const current_hour = require("../helper/current_time");
 
 const current_hour = new Date();
-var counter = 0
+
 // <===============================CONTROLLERS=======================================================>
 
 // site_Engineer Login handled here
@@ -76,27 +77,43 @@ exports.getUserDetails = async (req, res, next) => {
           "start_reason_id",
         ],
       });
-      result = {
-        user_id: details.user_id,
-        current_site: details.current_site,
-        current_moving_out_status: details.moving_out_status,
-        duty_status: details.onduty_status,
-        reason_id: details.start_reason_id,
-        tag_my_location_status: data.tag_my_location_status,
-      };
-      res.status(200).json({
-        code: 200,
-        status: "success",
-        message: "Documents fetched successfully",
-        result,
-      });
-    } else {
-      res.status(200).json({
-        code: 401,
-        status: "failure",
-        message: "No results found",
-      });
-    }
+      if( details !== null){
+        result = {
+          user_id: details.user_id,
+          current_site: details.current_site,
+          current_moving_out_status: details.moving_out_status,
+          duty_status: details.onduty_status,
+          reason_id: details.start_reason_id,
+          tag_my_location_status: data.tag_my_location_status,
+        };
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "Documents fetched successfully",
+          result,
+        });
+      } else {
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "No results found",
+          result : {
+            user_id: data.user_id,
+            duty_status : 0,
+          }
+        });
+      }
+      }else{
+        es.status(200).json({
+          code: 200,
+          status: "success",
+          message: "No results found",
+          result : {
+            user_id: data.user_id,
+            duty_status : 0
+          }
+        });
+      }
   } catch (err) {
     res.json({
       status: "error",
@@ -143,7 +160,8 @@ exports.onDuty = async (req, res, next) => {
             message:
               "you are not in the 500M radius of your site, please move forward and try again",
           });
-        } else {
+        } 
+        else {
           var index_check = await TRACK_SITE_ENGINEER.findOne({
             where: { user_id: user_id, date: today },
             attributes: ["user_id"],
@@ -170,7 +188,8 @@ exports.onDuty = async (req, res, next) => {
             });
           }
         }
-      } else {
+      } 
+      else {
         res.status(200).json({
           code: 401,
           status: "failure",
@@ -259,37 +278,83 @@ exports.MovingOutStage1 = async (req, res, next) => {
   // stage 2 are you reached the location
   else if (stage === 1) {
     try {
-      var result = await MovingOut.findOne({
-        where: { reason_ID: reason_id, customer_ID: customer_id },
-        attributes: ["latitude", "longitude"],
-      });
-
-      // const token = createToken(re)
-      if (result) {
-        distance_btw_employee_and_site =
-          findDistance(latitude, longitude, result.latitude, result.longitude) *
-          1000;
-        if (distance_btw_employee_and_site <= 500) {
-          
+      if(reason_id === 1 || reason_id === 2)
+      {
+        var result = await MovingOut.findOne({
+          where: { reason_ID: reason_id, Customer_ID: customer_id },
+          attributes: ["latitude", "longitude"],
+        });
+        if (result) {
+          distance_btw_employee_and_site =
+            findDistance(latitude, longitude, result.latitude, result.longitude) *
+            1000;
+          if (distance_btw_employee_and_site > 500) {
+            
+            res.status(200).json({
+              code: 401,
+              status: "failure",
+              message:
+                "your are not in the radius please move forward and try again",
+            });
+          } else {
+            var result = await TRACK_SITE_ENGINEER.update(
+              { moving_out_status: 2 },
+              { where: { user_id: user_id, date: today } }
+            );
+            // route_distance()
+            res.status(200).json({
+              code: 200,
+              status: "success",
+              message: "site engineer reached the place successfully",
+            });
+          }
+        }else{
           res.status(200).json({
-            code: 401,
+            code: 201,
             status: "failure",
-            message:
-              "your are not in the radius please move forward and try again",
-          });
-        } else {
-          var result = await TRACK_SITE_ENGINEER.update(
-            { moving_out_status: 2 },
-            { where: { user_id: user_id, date: today } }
-          );
-          // route_distance()
-          res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "site engineer reached the place successfully",
+            message: "Please save locations for this site",
           });
         }
       }
+      else
+      {
+        var result = await StaticMovingOut.findOne({
+          where: { reason_ID: reason_id},
+          attributes: ["latitude", "longitude"],
+        });
+        if (result) {
+          distance_btw_employee_and_site =
+            findDistance(latitude, longitude, result.latitude, result.longitude) *
+            1000;
+          if (distance_btw_employee_and_site > 500) {
+            
+            res.status(200).json({
+              code: 401,
+              status: "failure",
+              message:
+                "your are not in the radius please move forward and try again",
+            });
+          } else {
+            var result = await TRACK_SITE_ENGINEER.update(
+              { moving_out_status: 2 },
+              { where: { user_id: user_id, date: today } }
+            );
+            // route_distance()
+            res.status(200).json({
+              code: 200,
+              status: "success",
+              message: "site engineer reached the place successfully",
+            });
+          }
+        }else{
+          res.status(200).json({
+            code: 201,
+            status: "failure",
+            message: "Please save locations for this site",
+          });
+        }
+      }
+      // const token = createToken(re)  
     } catch (err) {
       res.json({
         status: "error",
@@ -346,19 +411,23 @@ exports.TagMyLocation = async (req, res, next) => {
   // console.log("param->", reason_id, customer_id, address, place_name, latitude, longitude );
   try {
     if (reason_id === 1 || reason_id === 2) {
-      var result = await MovingOut.update(
+      var result = await MovingOut.create(
         {
+          reason_ID: reason_id, 
+          Customer_ID: customer_id,
           address: address,
           place_name: place_name,
           latitude: latitude,
           longitude: longitude,
-        },
-        { where: { reason_ID: reason_id, customer_ID: customer_id } }
+        }
       );
-      console.log("result->", result[0]);
-      if (result[0] !== 0) {
+      if (result) {
+        
+        const index = await MovingOut.count({ where: { Customer_ID: customer_id }});
+        if(index === 2)
+        {
           var update_tag_status = await User.update(
-            { tag_my_location_status: counter++},
+            { tag_my_location_status: 1},
             { where: { current_site: customer_id } }
           );
           console.log(update_tag_status);
@@ -367,6 +436,21 @@ exports.TagMyLocation = async (req, res, next) => {
             status: "success",
             message: "details updated successfully",
           }); 
+        }
+        else if(index === 1){
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "details updated successfully",
+          }); 
+        }  
+        else if(index !== 1 || index > 2){
+          res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "tag my location for this site is already updated",
+          }); 
+        }  
       }
       else {
         res.status(200).json({
@@ -445,11 +529,114 @@ exports.offDuty = async (req, res, next) => {
   }
 };
 
+
+
+// ==========================================SUPER ADMIN APIS=======================================================================
+
+// create static reasons -> superAdmin API
+exports.createReasons = async (req, res, next) => {
+  const { reason_id, address, place_name, latitude, longitude } =
+    req.body;
+  try {
+    if(reason_id !== 1 && reason_id !==2)
+    {
+      await StaticMovingOut.create(
+        {
+          reason_ID: reason_id, 
+          address: address,
+          place_name: place_name,
+          latitude: latitude,
+          longitude: longitude
+        });
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "you have updated successfully",
+        });
+    }else {
+      res.status(200).json({
+        code: 401,
+        status: "failure",
+        message: "reason_id cannot be 1 or 2",
+    })}
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: "unknown error found from server side",
+    });
+  }
+};
+
+// create static reasons -> superAdmin API
+exports.getSiteEnginnerDetails = async (req, res, next) => {
+  const phone_number = req.body.phone_number;
+  try {
+    var data = await User.findOne({
+      where: { user_name: phone_number },
+      attributes: ["user_id", "current_site"],
+    });
+    // const token = createToken(re)
+    if (data) {
+      var details = await TRACK_SITE_ENGINEER.findAll({
+        where: {
+          user_id: data.user_id,
+          current_site: data.current_site,
+        },
+        attributes: [
+          "user_id",
+          "date",
+          "current_site",
+          "duty_started",
+          "duty_ended",
+          "quality_hours",
+          "current_site",
+          "onduty_status",
+          "moving_out_status",
+          "start_reason_id"
+        ],
+      });
+      if( details !== null){
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "Documents fetched successfully",
+          details
+        });
+      } else {
+        res.status(200).json({
+          code: 200,
+          status: "success",
+          message: "No results found",
+          result : {
+            user_id: data.user_id,
+            duty_status : 0
+          }
+        });
+      }
+      }else{
+        es.status(200).json({
+          code: 200,
+          status: "success",
+          message: "No results found",
+          result : {
+            user_id: data.user_id,
+            duty_status : 0
+          }
+        });
+      }
+  } catch (err) {
+    res.json({
+      status: "error",
+      message: "unknown error found from server side",
+    });
+  }
+};
+
 // create table
 
 // Create and Save
 exports.create = (req, res) => {
-  const result = TRACK_SITE_ENGINEER.sequelize.sync();
+  const result = StaticMovingOut.sequelize.sync();
   if (result) {
     res.status(200).json({
       code: 200,

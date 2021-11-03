@@ -1,7 +1,7 @@
 require('dotenv').config();
 const today = new Date().toISOString().split('T')[0];
 module.exports = (sequelize, Sequelize) => {
-    const track_siteEngineer = sequelize.define(process.env.TRACK_SITEENGINEER_TABLE, { 
+    const track_siteEngineer = sequelize.define('track_siteEngineer', { 
         user_id	: {
             type: Sequelize.BIGINT(10),
             defaultValue: null

@@ -1,6 +1,6 @@
 require('dotenv').config();
 module.exports = (sequelize, Sequelize) => {
-    const Employee = sequelize.define(process.env.EMPLOYEE_TABLE, {
+    const Employee = sequelize.define('employees', {
         id: {
             type: Sequelize.BIGINT(10),
             primaryKey: true

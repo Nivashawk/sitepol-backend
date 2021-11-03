@@ -6,8 +6,8 @@ const cors = require('cors')
 const mysql = require('mysql2');
 
 
-var port = process.env.PORT;
-var host = process.env.HOST; //must be string
+var port = 3000;
+var host = "0.0.0.0"; //must be string
 
 //Import Routes
 const employee = require('./route/employee.route')

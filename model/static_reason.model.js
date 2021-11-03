@@ -1,11 +1,7 @@
 require('dotenv').config();
 module.exports = (sequelize, Sequelize) => {
-    const MovingOut = sequelize.define('moving_out_SE', {
+    const StaticMovingOut = sequelize.define('static_moving_out_SE', {
         reason_ID: {
-            type: Sequelize.BIGINT(10),
-            defaultValue: null
-        },
-        Customer_ID	: {
             type: Sequelize.BIGINT(10),
             defaultValue: null
         },
@@ -26,5 +22,5 @@ module.exports = (sequelize, Sequelize) => {
             defaultValue: null
         }
     });
-    return MovingOut;
+    return StaticMovingOut;
   };

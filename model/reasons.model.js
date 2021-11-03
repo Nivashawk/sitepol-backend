@@ -1,6 +1,6 @@
 require('dotenv').config();
 module.exports = (sequelize, Sequelize) => {
-    const Reasons = sequelize.define(process.env.REASONS_TABLE, {
+    const Reasons = sequelize.define('reason_SE', {
         reason_ID: {
             type: Sequelize.BIGINT(10),
             primaryKey: true

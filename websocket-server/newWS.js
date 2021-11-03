@@ -29,7 +29,7 @@ app.ws('/websocket', (ws, req) => {
     //token handling logic must be implemented here
     const client_id = parseInt(userToken,10);
   
-    if (client_id)
+      if (client_id)
     {
       if (client_id == ADMIN_ID)
       {
@@ -37,11 +37,12 @@ app.ws('/websocket', (ws, req) => {
       }
       else
       {
-        clients[client_id + (++clientCounter)] = ws
+        clients[client_id] = ws
+        ws.send("connected sitepol websocket")
       }
     }
     //message handling
-    ws.on('message', msg => {
+        ws.on('message', msg => {
         if (!processMessage(msg)){
              ws.send(MESSAGE_FORMAT_ERROR);
         }
