@@ -1,40 +1,49 @@
-var axios = require("axios");
+const db = require("../model");
+const TRACK_SITE_ENGINEER = db.track_siteEngineer;
 
+var distance = require("google-distance");
+var KEY = "AIzaSyCkfdPSxugtDgQRfYhVvv_TmLnCVQrESbo";
 
-
-const route_distance = () => {
-  var distance = require("google-distance");
-  distance.apiKey = 'AIzaSyBeWksaQsbPVQ8czr379tVx6erIycLZmro';
-  // const apikey = AIzaSyBeWksaQsbPVQ8czr379tVx6erIycLZmro
-  // const origins = "13.137765339500627, 80.21890509760938"
-  // const destinations = "13.13066431255493, 80.21388389842524"
-
-  // var config = {
-  //     method: 'get',
-  //     url: `https://maps.googleapis.com/maps/api/distancematrix/json?${origins}&${destinations}&${apikey}`,
-  //     headers: { }
-  //   };
-
-  //   axios(config)
-  //   .then(function (response) {
-  //     console.log(JSON.stringify(response.data));
-  //     return response.data
-  //   })
-  //   .catch(function (error) {
-  //     console.log(error);
-  //     return error
-  //   });
-
+const route_distance = (user, latitude1, longitude2, latitude3, longitude4) => {
+  distance.apiKey = KEY;
   distance.get(
     {
-      origin: "San Francisco, CA",
-      destination: "San Diego, CA",
+      origin: `${latitude1},${longitude2}`,
+      destination: `${latitude3},${longitude4}`,
+      mode: "driving",
     },
     function (err, data) {
-      if (err) return console.log(err);
-      console.log(data);
+      if (err) {
+        response = err;
+        console.log(response);
+        return response;
+      } else {
+        google_distance = data["distanceValue"];
+        updatedistanceTravelled(user)
+      }
     }
   );
 };
+
+const updatedistanceTravelled = async (user) => {
+  const today = new Date().toISOString().split("T")[0];
+  console.log("date", today);
+  var data = await TRACK_SITE_ENGINEER.findOne({
+    where: { user_id: user, date: today },
+    attributes: ["total_distance_travelled"],
+  });
+  console.log("getdistance", data["total_distance_travelled"]);
+  if(data["total_distance_travelled"] !== null || data["total_distance_travelled"] !== undefined)
+  {
+    var total_distance_travelled = data["total_distance_travelled"] + google_distance
+    await TRACK_SITE_ENGINEER.update(
+      { total_distance_travelled: total_distance_travelled },
+      { where: { user_id: user, date: today } }
+  );
+  }
+     
+}
+
+
 
 module.exports = route_distance;

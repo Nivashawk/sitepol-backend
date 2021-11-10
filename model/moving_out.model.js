@@ -9,7 +9,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BIGINT(10),
             defaultValue: null
         },
-        place_name	: {
+        main_reason	: {
+            type: Sequelize.STRING(50)
+        },
+        sub_reason	: {
             type: Sequelize.STRING(50),
             defaultValue: null
         },

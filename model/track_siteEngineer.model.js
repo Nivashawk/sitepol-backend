@@ -32,7 +32,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         total_distance_travelled: {
             type: Sequelize.BIGINT(10),
-            defaultValue: null
+            defaultValue: 0
         },
         duty_started: {
             type : Sequelize.DATE,

@@ -94,7 +94,6 @@ const tagLocation = (req, res, next) => {
       reason_id: "required|integer",
       customer_id: "required|integer",
       place_name: "required|string",
-      address: "required|string",
       latitude: "required|string",
       longitude: "required|string"
   };
