@@ -16,7 +16,12 @@ function secondsToTime(secs)
     var seconds = Math.ceil(divisor_for_seconds);
 
     var difference = `${hours}:${minutes}:${seconds}`
-    return difference;
+    var parts = difference.split(/:/);
+    var timePeriodMillis = (parseInt(parts[0], 10) * 60 * 60 * 1000) +
+                       (parseInt(parts[1], 10) * 60 * 1000) + 
+                       (parseInt(parts[2], 10) * 1000);
+                       
+    return Math.floor((timePeriodMillis/1000/60) << 0);
 }
 
 module.exports = quality_time;

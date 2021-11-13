@@ -61,8 +61,8 @@ const processMessage = (msg) => {
         user_coordinates= message["source"].split(",");
         site_coordinates = message["destination"].split(",");     
         moving_status = message["moving_status"];
-        distance = calculateDistance(user_coordinates, site_coordinates);
-        if (distance > 0.5 && moving_status == 0 )
+        // distance = calculateDistance(user_coordinates, site_coordinates);
+        if ( moving_status === 0 )
         {
            message["error"] = "He's moving away";
            clients[user_id].send("Stay Freeze");

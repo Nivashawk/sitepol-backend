@@ -26,5 +26,6 @@ db.reason_SE = require("./reasons.model")(sequelize, Sequelize);
 db.moving_out_SE = require("./moving_out.model")(sequelize, Sequelize);
 db.track_siteEngineer = require("./track_siteEngineer.model")(sequelize, Sequelize);
 db.StaticMovingOut = require("./static_reason.model")(sequelize, Sequelize);
+db.SE_Quality_hours = require("./SE_Quality_hours")(sequelize, Sequelize);
 
 module.exports = db;

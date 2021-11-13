@@ -22,7 +22,10 @@ module.exports = (sequelize, Sequelize) => {
         },
         longitude: {
             type: Sequelize.STRING(50)
-        }
+        },
+        radius	: {
+            type: Sequelize.BIGINT(10)
+        },
     });
   
     return CustomerLocation;

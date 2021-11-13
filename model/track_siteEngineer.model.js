@@ -22,6 +22,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BIGINT(10),
             defaultValue: 0
         },
+        moving_out_time: {
+            type : Sequelize.DATE,
+            defaultValue: null
+        },
         start_reason_id: {
             type: Sequelize.BIGINT(10),
             defaultValue: 0
@@ -43,8 +47,8 @@ module.exports = (sequelize, Sequelize) => {
             defaultValue: null
         },
         quality_hours: {
-            type: Sequelize.STRING(10),
-            defaultValue: null
+            type: Sequelize.BIGINT(10),
+            defaultValue: 0
         },
     });
   

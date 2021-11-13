@@ -16,7 +16,7 @@ const requireAuth = (req, res, next) => {
     console.log(token[1]);
 
     if (token) {
-      jwt.verify(token[1], "secret key", (err) => {
+      jwt.verify(token[1], "XnDukaCzXHyjHKqvrz3zEUbDCUYqSP0k", (err) => {
         if (err) {
           console.log(err.message);
           res.status(401).json({
