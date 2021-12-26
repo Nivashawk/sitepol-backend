@@ -11,30 +11,41 @@ const { createToken } = require("../middelware/authMiddleware");
 const findDistance = require("../helper/distance");
 const quality_time = require("../helper/calculate_quality");
 const route_distance = require("../helper/google_distance");
+const ist = require("../helper/indian_standard_time");
 // const current_hour = require("../helper/current_time");
 
-const current_hour = new Date();
+var hardware_shop = 0;
+var rental_shop = 0;
+// const current_hour = new Date();
 
 // <===============================CONTROLLERS=======================================================>
 
 // site_Engineer Login handled here
 exports.login = async (req, res) => {
+  const today = new Date().toISOString().split("T")[0];
   const { phone_number, password } = req.body;
   try {
     var result = await User.findOne({
       where: { user_name: phone_number, user_password: password },
-      attributes: ["user_name", "user_password"],
+      attributes: ["user_name", "user_password", "user_total_logins"],
     });
     console.log(result);
-    const token = createToken(result.user_name);
+    // const token = createToken(result.user_name);
     if (result) {
+      await User.update(
+        {
+          user_first_login: today,
+          user_total_logins: result.user_total_logins + 1,
+        },
+        { where: { user_name: phone_number, user_password: password } }
+      );
       res.status(200).json({
         code: 200,
         status: "success",
         message: "LoggedIn successfully",
-        result: {
-          token: token,
-        },
+        // result: {
+        //   token: token,
+        // },
       });
     } else {
       res.status(200).json({
@@ -51,9 +62,207 @@ exports.login = async (req, res) => {
   }
 };
 
+const hardware_shop_status = async (customer_id) => {
+  var moving_out_response = await MovingOut.findAll({
+    where: { Customer_ID: customer_id },
+    attributes: ["reason_ID"],
+  });
+
+  // console.log("result type =>", typeof result);
+  // console.log("result object =>", result);
+  // console.log("result length =>", Object.keys(JSON.stringify(result)).length);
+
+  const result_length = Object.keys(moving_out_response).length;
+
+  // hardware shop logic
+  if (result_length !== 0 || result_length !== null || result_length !== undefined) {
+    if (result_length === 1 && result_length !== 0 && result_length !== null) {
+      if (moving_out_response[0]["reason_ID"] === 2) {
+        hardware_shop = 2;
+        return true
+      } else if (moving_out_response[0]["reason_ID"] === 1) {
+        hardware_shop = 1;
+        return true
+      } else {
+        hardware_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 2 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 2 ||
+        moving_out_response[1]["reason_ID"] === 2
+      ) {
+        hardware_shop = 2;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 1 ||
+        moving_out_response[1]["reason_ID"] === 1
+      ) {
+        hardware_shop = 1;
+        return true
+      } else {
+        hardware_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 3 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 2 ||
+        moving_out_response[1]["reason_ID"] === 2 ||
+        moving_out_response[2]["reason_ID"] === 2
+      ) {
+        hardware_shop = 2;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 1 ||
+        moving_out_response[1]["reason_ID"] === 1 ||
+        moving_out_response[2]["reason_ID"] === 1
+      ) {
+        hardware_shop = 1;
+        return true
+      } else {
+        hardware_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 4 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 2 ||
+        moving_out_response[1]["reason_ID"] === 2 ||
+        moving_out_response[2]["reason_ID"] === 2 ||
+        moving_out_response[3]["reason_ID"] === 2
+      ) {
+        hardware_shop = 2;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 1 ||
+        moving_out_response[1]["reason_ID"] === 1 ||
+        moving_out_response[2]["reason_ID"] === 1 ||
+        moving_out_response[3]["reason_ID"] === 1
+      ) {
+        hardware_shop = 1;
+        return true
+      } else {
+        hardware_shop = 0;
+        return true
+      }
+    }
+  } else {
+    hardware_shop = 0;
+    return true
+  }
+};
+
+const rental_shop_status = async (customer_id) => {
+  var moving_out_response = await MovingOut.findAll({
+    where: { Customer_ID: customer_id },
+    attributes: ["reason_ID"],
+  });
+
+  const result_length = Object.keys(moving_out_response).length;
+
+  // rental shop logic
+  if (result_length !== 0 || result_length !== null || result_length !== undefined) {
+    if (result_length === 1 && result_length !== 0 && result_length !== null) {
+      if (moving_out_response[0]["reason_ID"] === 4) {
+        rental_shop = 4;
+        return true
+      } else if (moving_out_response[0]["reason_ID"] === 3) {
+        rental_shop = 3;
+        return true
+      } else {
+        rental_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 2 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 4 ||
+        moving_out_response[1]["reason_ID"] === 4
+      ) {
+        rental_shop = 4;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 3 ||
+        moving_out_response[1]["reason_ID"] === 3
+      ) {
+        rental_shop = 3;
+        return true
+      } else {
+        rental_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 3 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 4 ||
+        moving_out_response[1]["reason_ID"] === 4 ||
+        moving_out_response[2]["reason_ID"] === 4
+      ) {
+        rental_shop = 4;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 3 ||
+        moving_out_response[1]["reason_ID"] === 3 ||
+        moving_out_response[2]["reason_ID"] === 3
+      ) {
+        rental_shop = 3;
+        return true
+      } else {
+        rental_shop = 0;
+        return true
+      }
+    } else if (
+      result_length === 4 &&
+      result_length !== 0 &&
+      result_length !== null
+    ) {
+      if (
+        moving_out_response[0]["reason_ID"] === 4 ||
+        moving_out_response[1]["reason_ID"] === 4 ||
+        moving_out_response[2]["reason_ID"] === 4 ||
+        moving_out_response[3]["reason_ID"] === 4
+      ) {
+        rental_shop = 4;
+        return true
+      } else if (
+        moving_out_response[0]["reason_ID"] === 3 ||
+        moving_out_response[1]["reason_ID"] === 3 ||
+        moving_out_response[2]["reason_ID"] === 3 ||
+        moving_out_response[3]["reason_ID"] === 3
+      ) {
+        rental_shop = 3;
+        return true
+      } else {
+        rental_shop = 0;
+        return true
+      }
+    }
+  } else {
+    rental_shop = 0;
+    return true
+  }
+};
+
 // Retrieve all details from the database.
 exports.getUserDetails = async (req, res, next) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
   const phone_number = req.body.phone_number;
   try {
     var data = await User.findOne({
@@ -81,23 +290,32 @@ exports.getUserDetails = async (req, res, next) => {
           ],
         });
         if (details !== null) {
-          result = {
-            user_id: details.user_id,
-            current_site: details.current_site,
-            current_moving_out_status: details.moving_out_status,
-            duty_status: details.onduty_status,
-            reason_id: details.start_reason_id,
-            tag_my_location_status: data.tag_my_location_status,
-            currentSite_latitude: data1.latitude,
-            currentSite_longitude: data1.longitude,
-            currentSite_radius: data1.radius,
-          };
-          res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Documents fetched successfully",
-            result,
-          });
+          await hardware_shop_status(data.current_site);
+          await rental_shop_status(data.current_site);
+          // console.log("HSS type", typeof HSS);
+          // console.log("HSS data",  HSS);
+          // console.log("RSS type", typeof RSS);
+          // console.log("RSS data",  RSS);
+          
+            result = {
+              user_id: details.user_id,
+              current_site: details.current_site,
+              current_moving_out_status: details.moving_out_status,
+              duty_status: details.onduty_status,
+              reason_id: details.start_reason_id,
+              tag_my_location_status: data.tag_my_location_status,
+              currentSite_latitude: data1.latitude,
+              currentSite_longitude: data1.longitude,
+              currentSite_radius: data1.radius,
+              hardware_shop: hardware_shop,
+              rental_shop: rental_shop,
+            };
+            res.status(200).json({
+              code: 200,
+              status: "success",
+              message: "Documents fetched successfully",
+              result,
+            });
         } else {
           res.status(200).json({
             code: 200,
@@ -110,7 +328,7 @@ exports.getUserDetails = async (req, res, next) => {
           });
         }
       } else {
-        es.status(200).json({
+        res.status(200).json({
           code: 200,
           status: "success",
           message: "you are off duty now",
@@ -120,6 +338,16 @@ exports.getUserDetails = async (req, res, next) => {
           },
         });
       }
+    } else {
+      es.status(200).json({
+        code: 200,
+        status: "success",
+        message: "you are off duty now",
+        result: {
+          user_id: data.user_id,
+          duty_status: 0,
+        },
+      });
     }
     // const token = createToken(re)
   } catch (err) {
@@ -134,7 +362,7 @@ exports.getUserDetails = async (req, res, next) => {
 exports.onDuty = async (req, res, next) => {
   const { user_id, latitude, longitude } = req.body;
   // const date = new Date();
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
   console.log(today);
 
   try {
@@ -143,17 +371,17 @@ exports.onDuty = async (req, res, next) => {
       attributes: ["current_site"],
     });
     if (find_current_site_of_employee !== null) {
-      var index_check = await TRACK_SITE_ENGINEER.findOne({
+      var index_check = await TRACK_SITE_ENGINEER.count({
         where: { user_id: user_id, date: today },
-        attributes: ["user_id"],
       });
       console.log("index->", index_check);
-      if (index_check === null) {
+      if (index_check === 0) {
         await TRACK_SITE_ENGINEER.create({
           onduty_status: 1,
           user_id: user_id,
           current_site: find_current_site_of_employee.current_site,
           onduty_status: 1,
+          date: today,
         });
         res.status(200).json({
           code: 200,
@@ -167,6 +395,11 @@ exports.onDuty = async (req, res, next) => {
           message: "you have already marked your attenadnce for today",
         });
       }
+    } else {
+      res.json({
+        status: "error",
+        message: "unknown error found from server side",
+      });
     }
   } catch (err) {
     res.json({
@@ -197,8 +430,7 @@ exports.getReasons = async (req, res, next) => {
           status: "success",
           message: "Documents fetched successfully",
           result: {
-            dynamic_reasons,
-            static_reasons,
+            reasons: [...dynamic_reasons, ...static_reasons],
           },
         });
       } else {
@@ -219,7 +451,9 @@ exports.getReasons = async (req, res, next) => {
 
 // Posting Moving out reasons
 exports.MovingOutStage1 = async (req, res, next) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
+  // const today_utc = new Date().toUTCString().split("T")[0];
+  console.log("ist =>", today);
   const {
     user_id,
     reason_id,
@@ -233,6 +467,7 @@ exports.MovingOutStage1 = async (req, res, next) => {
   // stage 1 select reasons
   if (stage === 0) {
     try {
+      const current_hour = new Date();
       var result = await TRACK_SITE_ENGINEER.update(
         {
           start_reason_id: reason_id,
@@ -266,12 +501,7 @@ exports.MovingOutStage1 = async (req, res, next) => {
   // stage 2 are you reached the location
   else if (stage === 1) {
     try {
-      if (
-        reason_id === 1 ||
-        reason_id === 2 ||
-        reason_id === 3 ||
-        reason_id === 4
-      ) {
+      if (reason_id <= 4) {
         var result = await MovingOut.findOne({
           where: { reason_ID: reason_id, Customer_ID: customer_id },
           attributes: ["latitude", "longitude"],
@@ -378,12 +608,7 @@ exports.MovingOutStage1 = async (req, res, next) => {
   // stage 3 reached the site
   else if (stage === 3) {
     try {
-      if (
-        reason_id === 1 ||
-        reason_id === 2 ||
-        reason_id === 3 ||
-        reason_id === 4
-      ) {
+      if (reason_id <= 4) {
         var result = await MovingOut.findOne({
           where: { reason_ID: reason_id, Customer_ID: customer_id },
           attributes: ["latitude", "longitude"],
@@ -472,16 +697,14 @@ exports.TagMyLocation = async (req, res, next) => {
     req.body;
   // console.log("param->", reason_id, customer_id, address, place_name, latitude, longitude );
   try {
-    if (
-      reason_id === 1 ||
-      reason_id === 2 ||
-      reason_id === 3 ||
-      reason_id === 4
-    ) {
+    if (reason_id <= 4) {
       const index = await MovingOut.count({
         where: { Customer_ID: customer_id },
       });
       if (index < 4) {
+        // const HSS = hardware_shop_status(customer_id);
+        // const RSS = rental_shop_status(customer_id);
+        // console.log("RSS",rental_shop_status(customer_id));
         var result = await MovingOut.create({
           reason_ID: reason_id,
           Customer_ID: customer_id,
@@ -491,7 +714,7 @@ exports.TagMyLocation = async (req, res, next) => {
           longitude: longitude,
         });
         if (result) {
-          if (index === 4) {
+          if (index === 3) {
             var update_tag_status = await User.update(
               { tag_my_location_status: 1 },
               { where: { current_site: customer_id } }
@@ -502,13 +725,13 @@ exports.TagMyLocation = async (req, res, next) => {
               status: "success",
               message: "details updated successfully",
             });
-          } else if (index === 1 || index === 2 || index === 3) {
+          } else if (index <= 2) {
             res.status(200).json({
               code: 200,
               status: "success",
               message: "details updated successfully",
             });
-          } else if (index > 4) {
+          } else if (index >= 4) {
             res.status(200).json({
               code: 200,
               status: "success",
@@ -546,7 +769,7 @@ exports.TagMyLocation = async (req, res, next) => {
 
 // Off duty handled here
 exports.offDuty = async (req, res, next) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
   const { user_id, customer_id, latitude, longitude } = req.body;
   try {
     await TRACK_SITE_ENGINEER.update(
@@ -573,7 +796,8 @@ exports.offDuty = async (req, res, next) => {
 
 // CheckIn handled here
 exports.checkIn = async (req, res, next) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
+  const current_hour = new Date();
   const { user_id } = req.body;
   try {
     await TRACK_SITE_ENGINEER.update(
@@ -601,7 +825,8 @@ exports.checkIn = async (req, res, next) => {
 
 // checkOut handled here
 exports.checkout = async (req, res, next) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = ist();
+  const current_hour = new Date();
   const { user_id } = req.body;
   try {
     await TRACK_SITE_ENGINEER.update(

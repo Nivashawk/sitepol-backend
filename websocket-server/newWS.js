@@ -61,14 +61,18 @@ const processMessage = (msg) => {
         user_coordinates= message["source"].split(",");
         site_coordinates = message["destination"].split(",");     
         moving_status = message["moving_status"];
-        // distance = calculateDistance(user_coordinates, site_coordinates);
-        if ( moving_status === 0 )
+        distance = Math.round(calculateDistance(user_coordinates, site_coordinates) * 1000);
+        console.log(distance);
+        if ( moving_status === 0 && distance > 200 )
         {
            message["error"] = "He's moving away";
            clients[user_id].send("Stay Freeze");
         }
+        else{
+          clients[user_id].send("working normal");
+        }
         if ( "admin" in clients )
-            clients['admin'].send(JSON.stringify(message));        
+            clients['admin'].send(JSON.stringify(message));      
         return true;  
     }
     catch

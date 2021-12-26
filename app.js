@@ -6,7 +6,7 @@ const cors = require('cors')
 const mysql = require('mysql2');
 
 
-var port = 3000;
+var port = 3001;
 var host = "0.0.0.0"; //must be string
 
 //Import Routes

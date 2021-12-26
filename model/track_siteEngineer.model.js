@@ -8,7 +8,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         date : {
             type : Sequelize.STRING(10),
-            defaultValue: today
+            defaultValue: null
         },
         current_site: {
             type: Sequelize.BIGINT(10),
